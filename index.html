@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML Converter</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header, .footer {
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header h1, .footer p {
+            margin: 0;
+        }
+
+        .cta-button {
+            background: black;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .cta-button:hover {
+            background: #555;
+        }
+
+        .footer p {
+            font-size: 12px;
+        }
+
+        .container {
+            width: 90%;
+            background: white;
+            padding: 80px 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .flex-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .input-section, .output-section {
+            flex: 1;
+            min-width: 45%;
+            margin: 10px;
+        }
+
+        textarea, #htmlOutput {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none;
+            background: #f9f9f9;
+        }
+
+        #htmlOutput {
+            white-space: pre-wrap;
+            font-family: monospace;
+            overflow-y: auto;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .convert-button {
+            background-color: black;
+            color: white;
+            border: none;
+        }
+
+        .convert-button:hover {
+            background-color: #f4f4f4;
+        }
+
+        .copy-button {
+            background-color: white;
+            color: black;
+            border: 1.5px solid black;  
+        }
+
+        .copy-button:hover {
+            background-color: #555;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .flex-container {
+                flex-direction: column;
+            }
+
+            .input-section, .output-section {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>&#128187;Markdown to HTML Converter</h1>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="flex-container">
+            <!-- Input Section -->
+            <div class="input-section">
+                <h2>Markdown Input</h2>
+                <textarea id="markdownInput" placeholder="Enter markdown text here..."></textarea>
+            </div>
+
+            <!-- Output Section -->
+            <div class="output-section">
+                <h2>HTML Output</h2>
+                <div id="htmlOutput"></div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div>
+            <button class="convert-button" id="convertButton">Convert</button>
+            <button class="copy-button" id="copyButton">Copy HTML</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 Markdown to HTML Converter. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.getElementById("convertButton").addEventListener("click", () => {
+            const markdown = document.getElementById("markdownInput").value;
+            const htmlOutput = markdownToHTML(markdown);
+            document.getElementById("htmlOutput").innerText = htmlOutput;
+        });
+
+        document.getElementById("copyButton").addEventListener("click", () => {
+            const htmlContent = document.getElementById("htmlOutput").innerText;
+            navigator.clipboard.writeText(htmlContent).then(() => {
+                alert("HTML copied to clipboard!");
+            }).catch(err => {
+                alert("Failed to copy HTML: " + err);
+            });
+        });
+
+        function markdownToHTML(markdown) {
+            const lines = markdown.split("\n");
+            let result = "";
+            let inList = false;
+
+            lines.forEach(line => {
+                // Headers
+                if (line.startsWith("### ")) {
+                    result += `<h3>${line.slice(4)}</h3>\n`;
+                } else if (line.startsWith("## ")) {
+                    result += `<h2>${line.slice(3)}</h2>\n`;
+                } else if (line.startsWith("# ")) {
+                    result += `<h1>${line.slice(2)}</h1>\n`;
+                }
+                // Bold Text
+                else if (/\*\*(.*?)\*\*/.test(line)) {
+                    const boldText = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+                    result += `<p>${boldText}</p>\n`;
+                }
+                // Italic Text
+                else if (/\*(.*?)\*/.test(line)) {
+                    const italicText = line.replace(/\*(.*?)\*/g, "<em>$1</em>");
+                    result += `<p>${italicText}</p>\n`;
+                }
+                // Unordered Lists
+                else if (line.startsWith("- ")) {
+                    if (!inList) {
+                        inList = true;
+                        result += "<ul>\n";
+                    }
+                    result += `<li>${line.slice(2)}</li>\n`;
+                }
+                // End list if needed
+                else if (inList && line.trim() === "") {
+                    inList = false;
+                    result += "</ul>\n";
+                }
+                // Paragraphs
+                else if (line.trim() === "") {
+                    result += "<br>\n";
+                } else {
+                    result += `<p>${line}</p>\n`;
+                }
+            });
+
+            // Close any remaining list
+            if (inList) {
+                result += "</ul>\n";
+            }
+
+            return result;
+        }
+    </script>
+</body>
+</html>
